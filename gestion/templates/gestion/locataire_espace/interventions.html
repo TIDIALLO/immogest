@@ -1,0 +1,28 @@
+{% extends 'gestion/locataire_espace/base.html' %}
+{% block title %}Mes signalements — ImmoGest{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Mes signalements</h1>
+  <a href="{% url 'espace_locataire_intervention_create' %}" class="btn btn-primary">＋ Signaler un problème</a>
+</div>
+<div class="content">
+  <div class="card">
+    <table>
+      <thead><tr><th>Titre</th><th>Description</th><th>Signalé le</th><th>Priorité</th><th>Statut</th></tr></thead>
+      <tbody>
+      {% for i in interventions %}
+        <tr>
+          <td style="font-weight:500">{{ i.titre }}</td>
+          <td style="max-width:320px">{{ i.description|truncatechars:80 }}</td>
+          <td>{{ i.date_signalement|date:"d/m/Y" }}</td>
+          <td><span class="badge badge-{{ i.priorite }}">{{ i.get_priorite_display }}</span></td>
+          <td><span class="badge badge-{{ i.statut }}">{{ i.get_statut_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="empty">Aucun signalement pour l'instant.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

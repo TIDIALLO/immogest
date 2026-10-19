@@ -1,0 +1,16 @@
+Django>=4.2,<5.2
+Pillow>=10.0
+openpyxl>=3.1
+python-dotenv>=1.0
+reportlab>=4.0        # génération des quittances PDF et des rapports financiers PDF
+
+# ── Production ────────────────────────────────────────────────────────────
+gunicorn>=21.2          # serveur d'application WSGI pour la prod (remplace runserver)
+whitenoise>=6.6         # sert les fichiers statiques (CSS/JS/images) sans serveur web dédié
+dj-database-url>=2.1    # permet de configurer la base via une seule variable DATABASE_URL
+psycopg2-binary>=2.9    # pilote PostgreSQL (utilisé si DATABASE_URL pointe vers postgres)
+
+# ── Stockage des médias en production (optionnel — à activer plus tard) ───
+# Décommentez ces deux lignes quand vous aurez un compte S3 / Cloudinary / équivalent
+# django-storages>=1.14
+# boto3>=1.34

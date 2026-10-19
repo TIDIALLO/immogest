@@ -1,0 +1,41 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Contrats — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Contrats de location</h1>
+  <select onchange="location.href='?statut='+this.value" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+    <option value="">Tous</option>
+    <option value="actif" {% if statut == 'actif' %}selected{% endif %}>Actifs</option>
+    <option value="termine" {% if statut == 'termine' %}selected{% endif %}>Terminés</option>
+    <option value="resilie" {% if statut == 'resilie' %}selected{% endif %}>Résiliés</option>
+  </select>
+  <a href="{% url 'contrat_create' %}" class="btn btn-primary">+ Nouveau contrat</a>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead><tr><th>Bien</th><th>Locataire</th><th>Type</th><th>Début</th><th>Fin</th><th>Loyer CC</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for c in contrats %}
+      <tr>
+        <td><a href="{% url 'bien_detail' c.bien.pk %}" style="color:var(--blue);text-decoration:none;font-weight:500">{{ c.bien.nom }}</a></td>
+        <td><a href="{% url 'locataire_detail' c.locataire.pk %}" style="color:var(--blue);text-decoration:none">{{ c.locataire }}</a></td>
+        <td>{{ c.get_type_bail_display }}</td>
+        <td>{{ c.date_debut|date:"d/m/Y" }}</td>
+        <td>{% if c.date_fin %}{{ c.date_fin|date:"d/m/Y" }}{% else %}<span style="color:var(--text-faint)">—</span>{% endif %}</td>
+        <td style="font-weight:500">{{ c.loyer_total|floatformat:0 }} F CFA</td>
+        <td><span class="badge badge-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+        <td><a href="{% url 'contrat_edit' c.pk %}" class="btn btn-sm">Modifier</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--text-faint);text-align:center;padding:32px">
+        Aucun contrat. <a href="{% url 'contrat_create' %}" style="color:var(--blue)">Créez-en un</a>.
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'gestion/locataire_espace/base.html' %}
+{% block title %}Signaler un problème — ImmoGest{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Signaler un problème</h1>
+  <a href="{% url 'espace_locataire_interventions' %}" class="btn">← Retour</a>
+</div>
+<div class="content">
+  <div class="card card-body" style="max-width:560px">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Titre du problème</label>
+        <input type="text" name="titre" placeholder="Ex : Fuite d'eau dans la salle de bain" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" rows="4" placeholder="Décrivez le problème le plus précisément possible…" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Priorité</label>
+        <select name="priorite">
+          {% for value, label in priorite_choices %}
+            <option value="{{ value }}" {% if value == 'normale' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="border:none;cursor:pointer">Envoyer le signalement</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

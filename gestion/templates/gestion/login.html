@@ -1,0 +1,18 @@
+{% extends 'gestion/auth_base.html' %}
+{% block title %}Connexion — ImmoGest{% endblock %}
+{% block content %}
+  {% if form.errors %}
+  <div class="errors">Identifiants incorrects. Veuillez réessayer.</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <label>Nom d'utilisateur</label>
+    <input type="text" name="username" autofocus>
+    <label>Mot de passe</label>
+    <input type="password" name="password">
+    <button type="submit">Se connecter</button>
+  </form>
+  <div class="back-link">
+    <a href="{% url 'password_reset' %}">Mot de passe oublié ?</a>
+  </div>
+{% endblock %}

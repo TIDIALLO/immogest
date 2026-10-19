@@ -1,0 +1,87 @@
+{% extends 'gestion/base.html' %}
+{% block title %}{{ locataire }} — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>{{ locataire }}</h1>
+  <a href="{% url 'locataires_list' %}" class="btn">← Retour</a>
+  <a href="{% url 'locataire_edit' locataire.pk %}" class="btn btn-primary">Modifier</a>
+</div>
+
+<div class="content">
+  <div class="grid-2">
+    <div class="card card-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <div style="width:52px;height:52px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700">{{ locataire.initiales }}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700">{{ locataire }}</div>
+          {% if locataire.profession %}<div style="color:var(--text-muted);font-size:13.5px">{{ locataire.profession }}</div>{% endif %}
+        </div>
+      </div>
+      <table style="font-size:13.5px">
+        <tr><td style="color:var(--text-faint);padding:6px 0;width:140px">Email</td><td>{{ locataire.email }}</td></tr>
+        <tr><td style="color:var(--text-faint);padding:6px 0">Téléphone</td><td>{{ locataire.telephone }}</td></tr>
+        {% if locataire.date_naissance %}<tr><td style="color:var(--text-faint);padding:6px 0">Naissance</td><td>{{ locataire.date_naissance|date:"d/m/Y" }}</td></tr>{% endif %}
+        {% if locataire.revenu_mensuel %}<tr><td style="color:var(--text-faint);padding:6px 0">Revenus</td><td>{{ locataire.revenu_mensuel|floatformat:0 }} F CFA / mois</td></tr>{% endif %}
+        {% if locataire.notes %}<tr><td style="color:var(--text-faint);padding:6px 0;vertical-align:top">Notes</td><td>{{ locataire.notes }}</td></tr>{% endif %}
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Historique des contrats</h2></div>
+      <table>
+        <thead><tr><th>Bien</th><th>Début</th><th>Fin</th><th>Loyer</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for c in locataire.contrats.all %}
+        <tr>
+          <td style="font-weight:500">{{ c.bien.nom }}</td>
+          <td>{{ c.date_debut|date:"d/m/Y" }}</td>
+          <td>{% if c.date_fin %}{{ c.date_fin|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+          <td>{{ c.loyer_total|floatformat:0 }} F CFA</td>
+          <td><span class="badge badge-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="color:var(--text-faint);text-align:center;padding:20px">Aucun contrat.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-body" style="grid-column: 1 / -1">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:600;margin-bottom:2px">Accès à l'espace locataire</div>
+          {% if locataire.compte %}
+            {% if locataire.compte.is_active %}
+              <div style="font-size:13px;color:var(--text-muted)">Compte actif — identifiant : <strong>{{ locataire.compte.username }}</strong></div>
+            {% else %}
+              <div style="font-size:13px;color:var(--red)">Compte désactivé — identifiant : <strong>{{ locataire.compte.username }}</strong></div>
+            {% endif %}
+          {% else %}
+            <div style="font-size:13px;color:var(--text-faint)">Ce locataire n'a pas encore d'accès pour consulter son contrat et ses paiements en ligne.</div>
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:8px">
+          {% if not locataire.compte or not locataire.compte.is_active %}
+            <form method="post" action="{% url 'locataire_creer_acces' locataire.pk %}" onsubmit="return confirm('Générer un nouvel accès pour {{ locataire }} ?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary">
+                {% if locataire.compte %}Réactiver l'accès{% else %}Créer un accès{% endif %}
+              </button>
+            </form>
+          {% else %}
+            <form method="post" action="{% url 'locataire_creer_acces' locataire.pk %}" onsubmit="return confirm('Réinitialiser le mot de passe de {{ locataire }} ?');">
+              {% csrf_token %}
+              <button type="submit" class="btn">Réinitialiser le mot de passe</button>
+            </form>
+            <form method="post" action="{% url 'locataire_revoquer_acces' locataire.pk %}" onsubmit="return confirm('Révoquer l\'accès de {{ locataire }} ?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Révoquer l'accès</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

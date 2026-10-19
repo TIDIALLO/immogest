@@ -1,0 +1,80 @@
+{% extends 'site_public/base.html' %}
+{% block title %}Réserver une chambre — ImmoGest{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }
+.page-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.page-header p { color: var(--text-muted); font-size: 14px; }
+.filters { background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; display: flex; gap: 10px; flex-wrap: wrap; margin: 24px 0; }
+.filters input, .filters select { padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13.5px; font-family: inherit; }
+.filters input[name="q"] { flex: 1; min-width: 180px; }
+.room-actions { padding: 0 18px 18px; display: flex; gap: 8px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+.pay-badges { display: flex; gap: 6px; padding: 0 18px 14px; }
+.pay-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--gray-100); color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🛎️ Réserver une chambre</h1>
+    <p>Choisissez votre chambre et passez votre commande — paiement sécurisé via Wave ou Orange Money.</p>
+  </div>
+</div>
+
+<div class="container">
+  <form class="filters" method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Nom, ville…">
+    <select name="ville">
+      <option value="">Toutes les villes</option>
+      {% for v in villes %}
+      <option value="{{ v }}" {% if ville == v %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Filtrer</button>
+  </form>
+
+  {% if biens %}
+  <div class="property-grid" style="padding-bottom:60px">
+    {% for b in biens %}
+    <div class="property-card card" style="cursor:default">
+      {% if b.photo %}
+        <img class="property-photo" src="{{ b.photo.url }}" alt="{{ b.nom }}">
+      {% else %}
+        <div class="property-photo-placeholder">🛏️</div>
+      {% endif %}
+      <div class="property-body">
+        <span class="badge badge-libre">Disponible</span>
+        <div class="property-title" style="margin-top:8px">{{ b.nom }}</div>
+        <div class="property-loc">📍 {{ b.ville }}</div>
+        <div class="property-meta">
+          <span>{{ b.get_type_bien_display }}</span>
+          <span>{{ b.surface }} m²</span>
+          <span>{{ b.nb_pieces }} pièce{{ b.nb_pieces|pluralize }}</span>
+        </div>
+        <div class="property-price">{{ b.loyer_charges|floatformat:0 }} F CFA <span>/ mois CC</span></div>
+      </div>
+      <div class="pay-badges">
+        <span class="pay-badge">Wave</span>
+        <span class="pay-badge">Orange Money</span>
+        <span class="pay-badge">Free Money</span>
+      </div>
+      <div class="room-actions">
+        <a href="{% url 'reservation_create' b.pk %}" class="btn btn-primary" style="flex:1;justify-content:center">Réserver</a>
+        <a href="{% url 'bien_public_detail' b.pk %}" class="btn" style="flex:1;justify-content:center">Détails</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:40px;margin-bottom:12px">🔍</div>
+    <p>Aucune chambre disponible pour le moment.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

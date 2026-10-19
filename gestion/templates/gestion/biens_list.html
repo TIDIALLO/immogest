@@ -1,0 +1,58 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Biens — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Biens immobiliers</h1>
+  <form class="search-form" method="get">
+    <input class="search-input" name="q" value="{{ q }}" placeholder="Rechercher…">
+    <select name="statut" onchange="this.form.submit()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+      <option value="">Tous les statuts</option>
+      <option value="libre" {% if statut == 'libre' %}selected{% endif %}>Libre</option>
+      <option value="loue" {% if statut == 'loue' %}selected{% endif %}>Loué</option>
+      <option value="travaux" {% if statut == 'travaux' %}selected{% endif %}>Travaux</option>
+      <option value="vente" {% if statut == 'vente' %}selected{% endif %}>En vente</option>
+    </select>
+    <button type="submit" class="btn">Filtrer</button>
+  </form>
+  <a href="{% url 'bien_create' %}" class="btn btn-primary">+ Ajouter</a>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th><th>Type</th><th>Adresse</th><th>Surface</th>
+          <th>Loyer</th><th>Statut</th><th>Locataire</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for b in biens %}
+      <tr>
+        <td><a href="{% url 'bien_detail' b.pk %}" style="color:var(--blue);text-decoration:none;font-weight:500">{{ b.nom }}</a></td>
+        <td>{{ b.get_type_bien_display }}</td>
+        <td style="color:var(--text-muted)">{{ b.adresse }}, {{ b.ville }}</td>
+        <td>{{ b.surface }} m²</td>
+        <td style="font-weight:500">{{ b.loyer_charges|floatformat:0 }} F CFA</td>
+        <td><span class="badge badge-{{ b.statut }}">{{ b.get_statut_display }}</span></td>
+        <td>
+          {% if b.locataire_actuel %}
+            <a href="{% url 'locataire_detail' b.locataire_actuel.pk %}" style="color:var(--blue);text-decoration:none">{{ b.locataire_actuel }}</a>
+          {% else %}<span style="color:var(--text-faint)">—</span>{% endif %}
+        </td>
+        <td style="white-space:nowrap">
+          <a href="{% url 'bien_edit' b.pk %}" class="btn btn-sm">Modifier</a>
+          <a href="{% url 'bien_delete' b.pk %}" class="btn btn-sm btn-danger" style="margin-left:4px">Supprimer</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--text-faint);text-align:center;padding:32px">
+        Aucun bien trouvé. <a href="{% url 'bien_create' %}" style="color:var(--blue)">Ajoutez votre premier bien</a>.
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

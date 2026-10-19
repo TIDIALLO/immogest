@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ImmoGest — Trouvez votre prochain logement{% endblock %}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #185FA5; --blue-light: #E6F1FB; --blue-dark: #0C447C;
+  --green: #3B6D11; --green-light: #EAF3DE;
+  --amber: #BA7517; --amber-light: #FAEEDA;
+  --red: #A32D2D; --red-light: #FCEBEB;
+  --gray-50: #f8f7f5; --gray-100: #f0efe9; --gray-200: #e0dfd8;
+  --gray-400: #888780; --gray-600: #5f5e5a; --gray-800: #444441;
+  --text: #1a1a18; --text-muted: #5f5e5a; --text-faint: #888780;
+  --border: #e0dfd8;
+  font-size: 15px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text); background: var(--gray-50); }
+
+a { color: inherit; }
+
+/* ── HEADER ── */
+.site-header { background: #fff; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; }
+.site-header-inner { max-width: 1120px; margin: 0 auto; padding: 16px 24px;
+  display: flex; align-items: center; gap: 24px; }
+.site-logo { display: flex; align-items: center; gap: 10px; text-decoration: none;
+  font-weight: 700; font-size: 18px; color: var(--text); }
+.site-logo .icon { width: 36px; height: 36px; border-radius: 9px; background: var(--blue);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 19px; }
+.site-nav { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+.site-nav a { text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 500;
+  padding: 8px 14px; border-radius: 7px; transition: all .15s; }
+.site-nav a:hover { background: var(--gray-100); color: var(--text); }
+.site-nav a.active { color: var(--blue); background: var(--blue-light); }
+.site-nav .btn-espace { border: 1px solid var(--border); }
+
+/* ── COMPONENTS ── */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  text-decoration: none; border: 1px solid var(--border); background: #fff;
+  color: var(--text); transition: all .15s; }
+.btn:hover { background: var(--gray-100); }
+.btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-lg { padding: 13px 26px; font-size: 15px; }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+.badge { display: inline-block; font-size: 11.5px; font-weight: 600;
+  padding: 3px 10px; border-radius: 12px; }
+.badge-libre { background: var(--green-light); color: var(--green); }
+
+.card { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+/* Property card */
+.property-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.property-card { text-decoration: none; color: inherit; display: block; transition: transform .15s, box-shadow .15s; }
+.property-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.08); }
+.property-photo { width: 100%; height: 180px; object-fit: cover; background: var(--gray-200); display: block; }
+.property-photo-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, var(--blue-light), var(--gray-100));
+  display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.property-body { padding: 16px 18px; }
+.property-title { font-size: 15.5px; font-weight: 600; margin-bottom: 4px; }
+.property-loc { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+.property-meta { display: flex; gap: 12px; font-size: 12.5px; color: var(--text-faint); margin-bottom: 10px; }
+.property-price { font-size: 17px; font-weight: 700; color: var(--blue); }
+.property-price span { font-size: 12px; font-weight: 400; color: var(--text-faint); }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500;
+  margin-bottom: 5px; color: var(--text-muted); }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 13px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; background: #fff; color: var(--text);
+  transition: border-color .15s; font-family: inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,.1); }
+.errorlist { list-style: none; margin-top: 4px; }
+.errorlist li { font-size: 12px; color: var(--red); }
+
+/* Alerts */
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 13.5px; margin-bottom: 16px; }
+.alert-success { background: var(--green-light); color: var(--green); border: 1px solid #c0dd97; }
+.alert-error { background: var(--red-light); color: var(--red); border: 1px solid #f7c1c1; }
+
+/* ── FOOTER ── */
+.site-footer { background: #fff; border-top: 1px solid var(--border); margin-top: 60px; }
+.site-footer-inner { max-width: 1120px; margin: 0 auto; padding: 40px 24px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; }
+.site-footer h4 { font-size: 13px; margin-bottom: 12px; color: var(--text); }
+.site-footer p, .site-footer a { font-size: 13.5px; color: var(--text-muted); line-height: 1.9; text-decoration: none; }
+.site-footer a:hover { color: var(--blue); }
+.footer-bottom { text-align: center; padding: 16px; font-size: 12.5px; color: var(--text-faint);
+  border-top: 1px solid var(--border); }
+
+@media (max-width: 720px) {
+  .site-nav { display: none; }
+  .site-footer-inner { grid-template-columns: 1fr; }
+}
+
+.whatsapp-float { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+  background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25); z-index: 200; transition: transform .15s; }
+.whatsapp-float:hover { transform: scale(1.08); }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="{% url 'public_index' %}" class="site-logo">
+      <span class="icon">🏠</span> ImmoGest
+    </a>
+    <nav class="site-nav">
+      <a href="{% url 'public_index' %}" class="{% if request.resolver_match.url_name == 'public_index' %}active{% endif %}">Accueil</a>
+      <a href="{% url 'reservation_rooms_list' %}" class="{% if 'reservation' in request.resolver_match.url_name %}active{% endif %}">Réserver</a>
+      <a href="{% url 'biens_public_list' %}" class="{% if 'biens_public' in request.resolver_match.url_name %}active{% endif %}">Nos biens</a>
+      <a href="{% url 'contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+      <a href="/gestion/login/" class="btn-espace">Espace propriétaire</a>
+    </nav>
+  </div>
+</header>
+
+{% if messages %}
+<div class="container" style="padding-top:20px">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'success' }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <h4>ImmoGest</h4>
+      <p>Votre partenaire de confiance pour la location immobilière.<br>
+      Nous accompagnons propriétaires et locataires à chaque étape.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <p><a href="{% url 'public_index' %}">Accueil</a></p>
+      <p><a href="{% url 'reservation_rooms_list' %}">Réserver</a></p>
+      <p><a href="{% url 'biens_public_list' %}">Nos biens</a></p>
+      <p><a href="{% url 'contact' %}">Contact</a></p>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <p>📍 Dakar, Sénégal</p>
+      <p>📞 +221 76 339 62 73</p>
+      <p>✉️ contact@immogest.sn</p>
+      <p><a href="https://wa.me/221763396273" target="_blank" rel="noopener">💬 WhatsApp</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">© {% now "Y" %} ImmoGest — Tous droits réservés.</div>
+</footer>
+
+<a href="https://wa.me/221763396273" target="_blank" rel="noopener" class="whatsapp-float" title="Discuter sur WhatsApp">
+  <svg viewBox="0 0 32 32" width="30" height="30" fill="#fff"><path d="M16.004 2.667c-7.36 0-13.333 5.973-13.333 13.333 0 2.353.615 4.647 1.784 6.667L2.667 29.333l6.822-1.789a13.27 13.27 0 0 0 6.515 1.72h.006c7.36 0 13.333-5.973 13.333-13.333S23.364 2.667 16.004 2.667zm0 24.4h-.005a11.06 11.06 0 0 1-5.64-1.545l-.405-.24-4.05 1.062 1.082-3.949-.264-.406a11.03 11.03 0 0 1-1.69-5.856c0-6.111 4.973-11.083 11.078-11.083 2.96 0 5.741 1.153 7.834 3.248a11.008 11.008 0 0 1 3.24 7.84c-.002 6.112-4.975 11.084-11.08 11.084zm6.076-8.302c-.333-.166-1.968-.971-2.273-1.082-.305-.111-.527-.166-.749.167-.222.333-.86 1.082-1.054 1.304-.194.222-.389.25-.72.083-.333-.166-1.405-.518-2.677-1.652-.99-.883-1.658-1.974-1.852-2.307-.194-.333-.02-.513.146-.679.15-.15.333-.389.5-.583.166-.194.222-.333.333-.555.111-.222.055-.417-.028-.583-.083-.166-.749-1.806-1.026-2.474-.27-.649-.545-.561-.749-.572l-.638-.011c-.222 0-.583.083-.888.417-.305.333-1.166 1.14-1.166 2.779 0 1.639 1.194 3.222 1.36 3.445.166.222 2.351 3.591 5.696 5.036.796.344 1.417.549 1.901.703.799.254 1.526.218 2.101.132.641-.096 1.968-.804 2.245-1.582.278-.777.278-1.443.194-1.582-.083-.139-.305-.222-.638-.389z"/></svg>
+</a>
+
+</body>
+</html>

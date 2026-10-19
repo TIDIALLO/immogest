@@ -1,0 +1,62 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Paiements — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Suivi des paiements</h1>
+  <select onchange="location.href='?statut='+this.value" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+    <option value="">Tous</option>
+    <option value="paye" {% if statut == 'paye' %}selected{% endif %}>Payés</option>
+    <option value="en_attente" {% if statut == 'en_attente' %}selected{% endif %}>En attente</option>
+    <option value="retard" {% if statut == 'retard' %}selected{% endif %}>En retard</option>
+    <option value="partiel" {% if statut == 'partiel' %}selected{% endif %}>Partiels</option>
+  </select>
+  <a href="{% url 'rapport_financier' %}?format=csv" class="btn">⬇ Export CSV</a>
+  <a href="{% url 'rapport_financier' %}?format=pdf" class="btn">⬇ Export PDF</a>
+  <a href="{% url 'paiement_create' %}" class="btn btn-primary">+ Enregistrer</a>
+</div>
+
+<div class="content">
+  <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px">
+    <div class="stat-card">
+      <div class="stat-label">✅ Total encaissé</div>
+      <div class="stat-value" style="color:var(--green)">{{ total_paye|floatformat:0 }} F CFA</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">⚠️ Reste à encaisser</div>
+      <div class="stat-value" style="color:var(--red)">{{ total_du|floatformat:0 }} F CFA</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Locataire</th><th>Bien</th><th>Mois</th><th>Dû</th><th>Payé</th><th>Solde</th><th>Mode</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for p in paiements %}
+      <tr>
+        <td style="font-weight:500">{{ p.contrat.locataire }}</td>
+        <td style="color:var(--text-muted)">{{ p.contrat.bien.nom }}</td>
+        <td>{{ p.mois|date:"F Y" }}</td>
+        <td>{{ p.montant_du|floatformat:0 }} F CFA</td>
+        <td>{{ p.montant_paye|floatformat:0 }} F CFA</td>
+        <td>
+          {% if p.solde > 0 %}<span style="color:var(--red);font-weight:500">{{ p.solde|floatformat:0 }} F CFA</span>
+          {% else %}<span style="color:var(--green)">—</span>{% endif %}
+        </td>
+        <td style="color:var(--text-muted)">{{ p.get_mode_paiement_display|default:"—" }}</td>
+        <td><span class="badge badge-{{ p.statut }}">{{ p.get_statut_display }}</span></td>
+        <td style="display:flex;gap:6px">
+          <a href="{% url 'paiement_edit' p.pk %}" class="btn btn-sm">Modifier</a>
+          {% if p.montant_paye > 0 %}
+          <a href="{% url 'paiement_quittance_pdf' p.pk %}" class="btn btn-sm" title="Télécharger la quittance">📄 Quittance</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" style="color:var(--text-faint);text-align:center;padding:32px">Aucun paiement.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

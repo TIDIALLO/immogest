@@ -1,0 +1,49 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Interventions — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Interventions &amp; Maintenance</h1>
+  <select onchange="location.href='?statut='+this.value" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+    <option value="">Tous statuts</option>
+    <option value="ouverte" {% if statut == 'ouverte' %}selected{% endif %}>Ouvertes</option>
+    <option value="en_cours" {% if statut == 'en_cours' %}selected{% endif %}>En cours</option>
+    <option value="terminee" {% if statut == 'terminee' %}selected{% endif %}>Terminées</option>
+  </select>
+  <select onchange="location.href='?priorite='+this.value" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+    <option value="">Toutes priorités</option>
+    <option value="urgente" {% if priorite == 'urgente' %}selected{% endif %}>Urgente</option>
+    <option value="haute" {% if priorite == 'haute' %}selected{% endif %}>Haute</option>
+    <option value="normale" {% if priorite == 'normale' %}selected{% endif %}>Normale</option>
+    <option value="basse" {% if priorite == 'basse' %}selected{% endif %}>Basse</option>
+  </select>
+  <a href="{% url 'intervention_create' %}" class="btn btn-primary">+ Nouvelle</a>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead><tr><th>Titre</th><th>Bien</th><th>Priorité</th><th>Statut</th><th>Signalé le</th><th>Prestataire</th><th>Coût</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for i in interventions %}
+      <tr>
+        <td>
+          <div style="font-weight:500">{{ i.titre }}</div>
+          {% if i.description %}<div style="font-size:12px;color:var(--text-faint);margin-top:2px">{{ i.description|truncatechars:60 }}</div>{% endif %}
+        </td>
+        <td><a href="{% url 'bien_detail' i.bien.pk %}" style="color:var(--blue);text-decoration:none">{{ i.bien.nom }}</a></td>
+        <td><span class="badge badge-{{ i.priorite }}">{{ i.get_priorite_display }}</span></td>
+        <td><span class="badge badge-{{ i.statut }}">{{ i.get_statut_display }}</span></td>
+        <td style="color:var(--text-muted)">{{ i.date_signalement|date:"d/m/Y" }}</td>
+        <td style="color:var(--text-muted)">{{ i.prestataire|default:"—" }}</td>
+        <td>{% if i.cout %}{{ i.cout|floatformat:0 }} F CFA{% else %}<span style="color:var(--text-faint)">—</span>{% endif %}</td>
+        <td><a href="{% url 'intervention_edit' i.pk %}" class="btn btn-sm">Modifier</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--text-faint);text-align:center;padding:32px">Aucune intervention.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Supprimer — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Confirmer la suppression</h1>
+</div>
+<div class="content">
+  <div class="card card-body" style="max-width:480px">
+    <p style="font-size:15px;margin-bottom:20px">
+      Êtes-vous sûr de vouloir supprimer <strong>{{ nom }}</strong> ?
+      Cette action est irréversible.
+    </p>
+    <form method="post" style="display:flex;gap:10px">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+      <a href="javascript:history.back()" class="btn">Annuler</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

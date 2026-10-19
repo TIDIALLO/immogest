@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ImmoGest{% endblock %}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background-image: url("{% static 'gestion/images.jpg' %}");
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  position: relative; }
+body::before { content: ''; position: absolute; inset: 0;
+  background: rgba(0, 0, 0, 0.5); z-index: 0; }
+.login-card { background: rgba(255,255,255,0.95); border: 1px solid #e0dfd8; border-radius: 14px;
+  padding: 40px; width: 400px; position: relative; z-index: 1;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+.logo-icon { width: 40px; height: 40px; border-radius: 10px; background: #185FA5;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.logo h1 { font-size: 20px; font-weight: 700; }
+.logo p { font-size: 13px; color: #888780; }
+p.lead { font-size: 13.5px; color: #5f5e5a; margin-bottom: 20px; line-height: 1.5; }
+label { display: block; font-size: 13px; font-weight: 500; color: #5f5e5a; margin-bottom: 5px; }
+input { width: 100%; padding: 10px 13px; border: 1px solid #e0dfd8; border-radius: 8px;
+  font-size: 14.5px; margin-bottom: 16px; font-family: inherit; }
+input:focus { outline: none; border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,.1); }
+button, .btn-link { width: 100%; display: block; text-align: center; padding: 11px; background: #185FA5; color: #fff; border: none;
+  border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px;
+  text-decoration: none; box-sizing: border-box; }
+button:hover, .btn-link:hover { background: #0C447C; }
+.errors { background: #FCEBEB; color: #A32D2D; border-radius: 7px; padding: 10px 14px;
+  font-size: 13px; margin-bottom: 16px; }
+.back-link { text-align: center; margin-top: 16px; }
+.back-link a { font-size: 13px; color: #5f5e5a; text-decoration: none; }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="login-card">
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <div>
+      <h1>ImmoGest</h1>
+      <p>Gestion immobilière</p>
+    </div>
+  </div>
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

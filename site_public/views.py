@@ -1,0 +1,155 @@
+from django.shortcuts import render, get_object_or_404, redirect # type: ignore
+from django.contrib import messages # type: ignore
+from django.db import transaction # type: ignore
+from django.db.models import Q # type: ignore
+from gestion.models import Bien, Reservation, DemandeContact
+from gestion.forms import ContactPublicForm, ReservationForm
+
+
+def index(request):
+    """Page d'accueil du site public."""
+    biens_disponibles = Bien.objects.filter(statut='libre').order_by('-created_at')
+    featured = biens_disponibles[:6]
+    nb_biens_disponibles = biens_disponibles.count()
+    villes = (Bien.objects.filter(statut='libre')
+              .exclude(ville='').values_list('ville', flat=True).distinct().order_by('ville')[:12])
+    return render(request, 'site_public/index.html', {
+        'featured': featured,
+        'nb_biens_disponibles': nb_biens_disponibles,
+        'villes': villes,
+    })
+
+
+def biens_public_list(request):
+    """Catalogue public des biens disponibles à la location."""
+    qs = Bien.objects.filter(statut='libre')
+    q = request.GET.get('q', '')
+    ville = request.GET.get('ville', '')
+    type_bien = request.GET.get('type', '')
+    prix_max = request.GET.get('prix_max', '')
+
+    if q:
+        qs = qs.filter(Q(nom__icontains=q) | Q(adresse__icontains=q) | Q(ville__icontains=q))
+    if ville:
+        qs = qs.filter(ville__iexact=ville)
+    if type_bien:
+        qs = qs.filter(type_bien=type_bien)
+    if prix_max:
+        try:
+            qs = qs.filter(loyer_charges__lte=float(prix_max))
+        except ValueError:
+            pass
+
+    villes = (Bien.objects.filter(statut='libre')
+              .exclude(ville='').values_list('ville', flat=True).distinct().order_by('ville'))
+
+    return render(request, 'site_public/biens_list.html', {
+        'biens': qs.order_by('-created_at'),
+        'villes': villes,
+        'q': q, 'ville': ville, 'type_bien': type_bien, 'prix_max': prix_max,
+        'type_choices': Bien.TYPE_CHOICES,
+    })
+
+
+def bien_public_detail(request, pk):
+    """Fiche détaillée publique d'un bien, avec formulaire de contact."""
+    bien = get_object_or_404(Bien, pk=pk, statut='libre')
+    autres_biens = Bien.objects.filter(statut='libre', ville=bien.ville).exclude(pk=pk)[:3]
+
+    if request.method == 'POST':
+        form = ContactPublicForm(request.POST, initial={'bien': bien.pk})
+        if form.is_valid():
+            demande = form.save(commit=False)
+            demande.bien = bien
+            demande.save()
+            messages.success(request, 'Votre demande a bien été envoyée. Nous vous recontacterons rapidement.')
+            return redirect('bien_public_detail', pk=pk)
+    else:
+        form = ContactPublicForm(initial={'bien': bien.pk})
+
+    return render(request, 'site_public/bien_detail.html', {
+        'bien': bien, 'form': form, 'autres_biens': autres_biens,
+    })
+
+
+def contact(request):
+    """Page de contact générale (non liée à un bien précis)."""
+    if request.method == 'POST':
+        form = ContactPublicForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Votre message a bien été envoyé. Nous vous répondrons dans les meilleurs délais.')
+            return redirect('contact')
+    else:
+        form = ContactPublicForm(initial={'bien': None})
+    return render(request, 'site_public/contact.html', {'form': form})
+
+
+# ── RÉSERVATION / COMMANDE DE CHAMBRE ────────────────────────────────────────
+
+def reservation_rooms_list(request):
+    """Page 'Réserver' : liste des chambres/biens disponibles à commander."""
+    qs = Bien.objects.filter(statut='libre')
+    q = request.GET.get('q', '')
+    ville = request.GET.get('ville', '')
+    if q:
+        qs = qs.filter(Q(nom__icontains=q) | Q(ville__icontains=q))
+    if ville:
+        qs = qs.filter(ville__iexact=ville)
+    villes = (Bien.objects.filter(statut='libre')
+              .exclude(ville='').values_list('ville', flat=True).distinct().order_by('ville'))
+    return render(request, 'site_public/reservation_rooms.html', {
+        'biens': qs.order_by('-created_at'), 'villes': villes, 'q': q, 'ville': ville,
+    })
+
+
+def _creer_demande_depuis_reservation(reservation):
+    """
+    Crée dans « Demandes clients » un message signalant la nouvelle réservation,
+    afin que le propriétaire la voie aussi de ce côté (liste + badge du menu).
+    Les informations essentielles sont placées au début du message, car la liste
+    n'en affiche que les premiers mots.
+    """
+    depart = (f", départ le {reservation.date_depart:%d/%m/%Y}"
+              if reservation.date_depart else "")
+    message = (
+        f"Nouvelle réservation {reservation.reference} : "
+        f"arrivée le {reservation.date_arrivee:%d/%m/%Y}{depart}, "
+        f"{reservation.nb_personnes} personne(s), "
+        f"paiement par {reservation.get_mode_paiement_display()}."
+    )
+    if reservation.message:
+        message += f" Message du client : {reservation.message}"
+
+    DemandeContact.objects.create(
+        bien=reservation.bien,
+        nom=reservation.nom,
+        email=reservation.email,
+        telephone=reservation.telephone,
+        message=message,
+    )
+
+
+def reservation_create(request, pk):
+    """Formulaire de commande/réservation pour une chambre précise."""
+    bien = get_object_or_404(Bien, pk=pk, statut='libre')
+
+    if request.method == 'POST':
+        form = ReservationForm(request.POST, initial={'bien': bien.pk})
+        if form.is_valid():
+            with transaction.atomic():
+                reservation = form.save(commit=False)
+                reservation.bien = bien
+                reservation.save()
+                _creer_demande_depuis_reservation(reservation)
+            return redirect('reservation_confirmation', pk=reservation.pk)
+    else:
+        form = ReservationForm(initial={'bien': bien.pk})
+
+    return render(request, 'site_public/reservation_form.html', {'bien': bien, 'form': form})
+
+
+def reservation_confirmation(request, pk):
+    """Page de confirmation : instructions de paiement Wave / Orange Money + WhatsApp."""
+    reservation = get_object_or_404(Reservation, pk=pk)
+    return render(request, 'site_public/reservation_confirmation.html', {'reservation': reservation})

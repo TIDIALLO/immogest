@@ -1,0 +1,91 @@
+{% extends 'site_public/base.html' %}
+{% block title %}Confirmation de réservation — ImmoGest{% endblock %}
+
+{% block extra_css %}
+<style>
+.confirm-wrap { max-width: 640px; margin: 0 auto; padding: 56px 24px; }
+.confirm-head { text-align: center; margin-bottom: 32px; }
+.confirm-head .ic { font-size: 48px; margin-bottom: 12px; }
+.confirm-head h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.confirm-head p { color: var(--text-muted); font-size: 14.5px; }
+.ref-box { background: var(--blue-light); border-radius: 10px; padding: 14px 18px;
+  text-align: center; margin-bottom: 24px; font-size: 14px; }
+.ref-box strong { color: var(--blue); font-size: 17px; }
+.pay-card { border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+.pay-card h3 { font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.pay-card ol { padding-left: 20px; color: var(--text-muted); font-size: 14px; line-height: 1.9; }
+.pay-card .num { background: var(--gray-100); border-radius: 8px; padding: 10px 14px;
+  font-weight: 700; font-size: 16px; letter-spacing: .03em; margin: 10px 0; display: inline-block; }
+.whatsapp-cta { background: #25D366; color: #fff; border-radius: 12px; padding: 22px; text-align: center; }
+.whatsapp-cta h3 { margin-bottom: 8px; font-size: 16px; }
+.whatsapp-cta p { font-size: 13.5px; opacity: .95; margin-bottom: 16px; }
+.whatsapp-cta a.btn { background: #fff; color: #128C4A; border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="confirm-wrap">
+    <div class="confirm-head">
+      <div class="ic">✅</div>
+      <h1>Votre commande a bien été enregistrée</h1>
+      <p>Il ne reste plus qu'à effectuer le paiement pour confirmer votre réservation.</p>
+    </div>
+
+    <div class="ref-box">
+      Référence de réservation : <strong>{{ reservation.reference }}</strong><br>
+      {{ reservation.bien.nom }} — {{ reservation.date_arrivee|date:"d/m/Y" }}
+    </div>
+
+    {% if reservation.mode_paiement == 'wave' %}
+    <div class="pay-card">
+      <h3>🌊 Paiement via Wave</h3>
+      <ol>
+        <li>Ouvrez votre application <strong>Wave</strong></li>
+        <li>Envoyez <strong>{{ reservation.bien.loyer_charges|floatformat:0 }} F CFA</strong> (ou l'acompte convenu) au numéro :
+          <div class="num">+221 77 123 45 67</div>
+        </li>
+        <li>Indiquez la référence <strong>{{ reservation.reference }}</strong> dans le motif du paiement</li>
+        <li>Envoyez-nous une capture d'écran du paiement sur WhatsApp pour confirmer votre réservation</li>
+      </ol>
+    </div>
+    {% elif reservation.mode_paiement == 'orange_money' %}
+    <div class="pay-card">
+      <h3>🟠 Paiement via Orange Money</h3>
+      <ol>
+        <li>Composez <strong>#144#</strong> sur votre téléphone Orange, ou ouvrez l'app Orange Money</li>
+        <li>Envoyez <strong>{{ reservation.bien.loyer_charges|floatformat:0 }} F CFA</strong> (ou l'acompte convenu) au numéro :
+          <div class="num">+221 77 123 45 67</div>
+        </li>
+        <li>Indiquez la référence <strong>{{ reservation.reference }}</strong> dans le motif du paiement</li>
+        <li>Envoyez-nous le reçu du paiement sur WhatsApp pour confirmer votre réservation</li>
+      </ol>
+    </div>
+    {% else %}
+    <div class="pay-card">
+      <h3>🔴 Paiement via Free Money</h3>
+      <ol>
+        <li>Composez <strong>#144#</strong> sur votre téléphone Free, ou ouvrez l'app Free Money</li>
+        <li>Envoyez <strong>{{ reservation.bien.loyer_charges|floatformat:0 }} F CFA</strong> (ou l'acompte convenu) au numéro :
+          <div class="num">+221 77 123 45 67</div>
+        </li>
+        <li>Indiquez la référence <strong>{{ reservation.reference }}</strong> dans le motif du paiement</li>
+        <li>Envoyez-nous le reçu du paiement sur WhatsApp pour confirmer votre réservation</li>
+      </ol>
+    </div>
+    {% endif %}
+
+    <div class="whatsapp-cta">
+      <h3>💬 Confirmez votre paiement sur WhatsApp</h3>
+      <p>Envoyez-nous votre référence et votre preuve de paiement, nous confirmons votre réservation immédiatement.</p>
+      <a class="btn" href="https://wa.me/221763396273?text=Bonjour%2C%20je%20viens%20de%20r%C3%A9server%20{{ reservation.bien.nom|urlencode }}%20(r%C3%A9f.%20{{ reservation.reference }})%2C%20voici%20ma%20preuve%20de%20paiement." target="_blank" rel="noopener">
+        Ouvrir WhatsApp
+      </a>
+    </div>
+
+    <p style="text-align:center;margin-top:24px">
+      <a href="{% url 'reservation_rooms_list' %}" style="color:var(--blue);text-decoration:none;font-size:13.5px">← Réserver une autre chambre</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

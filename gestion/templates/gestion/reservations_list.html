@@ -1,0 +1,66 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Réservations — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Réservations reçues</h1>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a href="{% url 'reservation_create_manual' %}" class="btn btn-primary">+ Nouvelle réservation</a>
+    <form class="search-form" method="get">
+      <select name="statut" onchange="this.form.submit()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+        <option value="">Tous les statuts</option>
+        <option value="en_attente" {% if statut == 'en_attente' %}selected{% endif %}>En attente de paiement</option>
+        <option value="payee" {% if statut == 'payee' %}selected{% endif %}>Payée</option>
+        <option value="confirmee" {% if statut == 'confirmee' %}selected{% endif %}>Confirmée</option>
+        <option value="annulee" {% if statut == 'annulee' %}selected{% endif %}>Annulée</option>
+      </select>
+    </form>
+  </div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Réf.</th><th>Client</th><th>Chambre / bien</th><th>Arrivée</th><th>Départ</th>
+          <th>Paiement</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in reservations %}
+      <tr>
+        <td style="font-weight:500">{{ r.reference }}</td>
+        <td>
+          {{ r.nom }}<br>
+          <span style="color:var(--text-muted);font-size:12px">{{ r.telephone }}</span>
+        </td>
+        <td>
+          <a href="{% url 'bien_detail' r.bien.pk %}" style="color:var(--blue);text-decoration:none">{{ r.bien.nom }}</a>
+        </td>
+        <td>{{ r.date_arrivee|date:"d/m/Y" }}</td>
+        <td>{% if r.date_depart %}{{ r.date_depart|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+        <td>{{ r.get_mode_paiement_display }}</td>
+        <td><span class="badge badge-{{ r.statut }}">{{ r.get_statut_display }}</span></td>
+        <td style="white-space:nowrap">
+          <form method="post" action="{% url 'reservation_update_statut' r.pk %}" style="display:flex;gap:4px">
+            {% csrf_token %}
+            <select name="statut" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px">
+              {% for key, label in r.STATUT_CHOICES %}
+              <option value="{{ key }}" {% if r.statut == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm">OK</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--text-faint);text-align:center;padding:32px">
+        Aucune réservation reçue pour le moment.
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

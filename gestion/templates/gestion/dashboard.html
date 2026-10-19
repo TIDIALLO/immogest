@@ -1,0 +1,164 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Tableau de bord — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Tableau de bord</h1>
+  <a href="{% url 'bien_create' %}" class="btn btn-primary">+ Ajouter un bien</a>
+</div>
+
+<div class="content">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">🏢 Biens totaux</div>
+      <div class="stat-value">{{ total_biens }}</div>
+      <div class="stat-sub">{{ biens_loues }} loués · {{ biens_libres }} libres · {{ biens_travaux }} travaux</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">💶 Revenus du mois</div>
+      <div class="stat-value" style="color:var(--green)">{{ revenus_mois|floatformat:0 }} F CFA</div>
+      <div class="stat-sub">Loyers encaissés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📈 Taux d'occupation</div>
+      <div class="stat-value">{{ taux }}%</div>
+      <div class="stat-sub">{{ biens_loues }}/{{ total_biens }} biens occupés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" style="color:var(--red)">⚠️ Loyers en retard</div>
+      <div class="stat-value" style="color:var(--red)">{{ nb_retard }}</div>
+      <div class="stat-sub">{{ montant_retard|floatformat:0 }} F CFA à recouvrer</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header">
+      <h2>Évolution des revenus (6 derniers mois)</h2>
+      <a href="{% url 'rapport_financier' %}" class="btn btn-sm">📊 Exporter un rapport</a>
+    </div>
+    <div class="card-body">
+      <canvas id="revenusChart" height="80"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-header">
+        <h2>Mes biens récents</h2>
+        <a href="{% url 'biens_list' %}" class="btn btn-sm">Voir tout</a>
+      </div>
+      <table>
+        <thead><tr><th>Bien</th><th>Ville</th><th>Statut</th><th>Loyer</th></tr></thead>
+        <tbody>
+        {% for b in derniers_biens %}
+        <tr>
+          <td><a href="{% url 'bien_detail' b.pk %}" style="color:var(--blue);text-decoration:none;font-weight:500">{{ b.nom }}</a></td>
+          <td style="color:var(--text-muted)">{{ b.ville }}</td>
+          <td><span class="badge badge-{{ b.statut }}">{{ b.get_statut_display }}</span></td>
+          <td style="font-weight:500">{{ b.loyer_charges|floatformat:0 }} F CFA</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--text-faint);text-align:center;padding:24px">Aucun bien. <a href="{% url 'bien_create' %}">Ajoutez-en un</a></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Paiements récents</h2>
+        <a href="{% url 'paiements_list' %}" class="btn btn-sm">Voir tout</a>
+      </div>
+      <table>
+        <thead><tr><th>Locataire</th><th>Mois</th><th>Montant</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for p in paiements_recents %}
+        <tr>
+          <td style="font-weight:500">{{ p.contrat.locataire }}</td>
+          <td style="color:var(--text-muted)">{{ p.mois|date:"M Y" }}</td>
+          <td>{{ p.montant_paye|floatformat:0 }} F CFA</td>
+          <td><span class="badge badge-{{ p.statut }}">{{ p.get_statut_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--text-faint);text-align:center;padding:24px">Aucun paiement.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <h2>Contrats arrivant à terme</h2>
+      </div>
+      <table>
+        <thead><tr><th>Bien</th><th>Locataire</th><th>Fin</th></tr></thead>
+        <tbody>
+        {% for c in contrats_fin %}
+        <tr>
+          <td style="font-weight:500">{{ c.bien.nom }}</td>
+          <td>{{ c.locataire }}</td>
+          <td style="color:var(--amber)">{{ c.date_fin|date:"d/m/Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="color:var(--text-faint);text-align:center;padding:24px">Aucun contrat à renouveler prochainement.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Interventions en cours</h2>
+        <a href="{% url 'interventions_list' %}" class="btn btn-sm">Voir tout</a>
+      </div>
+      <table>
+        <thead><tr><th>Titre</th><th>Bien</th><th>Priorité</th></tr></thead>
+        <tbody>
+        {% for i in interventions %}
+        <tr>
+          <td style="font-weight:500">{{ i.titre }}</td>
+          <td style="color:var(--text-muted)">{{ i.bien.nom }}</td>
+          <td><span class="badge badge-{{ i.priorite }}">{{ i.get_priorite_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="color:var(--text-faint);text-align:center;padding:24px">Aucune intervention ouverte.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const ctx = document.getElementById('revenusChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ graph_labels|safe }},
+        datasets: [{
+          label: 'Revenus encaissés (F CFA)',
+          data: {{ graph_data|safe }},
+          borderColor: '#185FA5',
+          backgroundColor: 'rgba(24, 95, 165, 0.1)',
+          tension: 0.3,
+          fill: true,
+          pointBackgroundColor: '#185FA5',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+</script>
+{% endblock %}

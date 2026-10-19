@@ -1,0 +1,20 @@
+{% extends 'gestion/locataire_espace/base.html' %}
+{% block title %}Mot de passe — ImmoGest{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Changer mon mot de passe</h1></div>
+<div class="content">
+  <div class="card card-body" style="max-width:420px">
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="alert alert-error" style="margin-top:6px;padding:6px 10px">{{ field.errors|join:", " }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary" style="border:none;cursor:pointer">Mettre à jour</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

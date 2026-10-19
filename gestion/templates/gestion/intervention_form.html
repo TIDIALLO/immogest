@@ -1,0 +1,31 @@
+{% extends 'gestion/base.html' %}
+{% block title %}{{ title }} — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>{{ title }}</h1>
+  <a href="javascript:history.back()" class="btn">← Retour</a>
+</div>
+
+<div class="content">
+  <div class="card" style="max-width:760px">
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% endfor %}
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <a href="javascript:history.back()" class="btn">Annuler</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

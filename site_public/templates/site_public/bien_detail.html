@@ -1,0 +1,119 @@
+{% extends 'site_public/base.html' %}
+{% block title %}{{ bien.nom }} — ImmoGest{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-hero { width: 100%; height: 340px; object-fit: cover; background: var(--gray-200); }
+.detail-hero-placeholder { width: 100%; height: 340px; background: linear-gradient(135deg, var(--blue-light), var(--gray-100));
+  display: flex; align-items: center; justify-content: center; font-size: 64px; }
+.detail-wrap { display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; padding: 32px 0 64px; align-items: start; }
+.detail-main h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.detail-loc { color: var(--text-muted); font-size: 14.5px; margin-bottom: 18px; }
+.detail-meta-row { display: flex; gap: 24px; flex-wrap: wrap; padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.detail-meta-item { text-align: center; }
+.detail-meta-item .v { font-size: 18px; font-weight: 700; }
+.detail-meta-item .l { font-size: 12px; color: var(--text-faint); }
+.detail-desc h2 { font-size: 17px; margin-bottom: 10px; }
+.detail-desc p { color: var(--text-muted); line-height: 1.8; font-size: 14.5px; white-space: pre-line; }
+.contact-box { position: sticky; top: 90px; }
+.contact-box .price { font-size: 26px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.contact-box .price span { font-size: 13px; font-weight: 400; color: var(--text-faint); }
+.contact-box .card-body { padding: 22px; }
+.contact-box h3 { font-size: 15.5px; margin: 18px 0 4px; }
+.similar-section { padding: 0 0 60px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if bien.photo %}
+<img class="detail-hero" src="{{ bien.photo.url }}" alt="{{ bien.nom }}">
+{% else %}
+<div class="detail-hero-placeholder">🏠</div>
+{% endif %}
+
+<div class="container">
+  <div class="detail-wrap">
+    <div class="detail-main">
+      <span class="badge badge-libre">Disponible</span>
+      <h1 style="margin-top:10px">{{ bien.nom }}</h1>
+      <div class="detail-loc">📍 {{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</div>
+
+      <div class="detail-meta-row">
+        <div class="detail-meta-item"><div class="v">{{ bien.get_type_bien_display }}</div><div class="l">Type</div></div>
+        <div class="detail-meta-item"><div class="v">{{ bien.surface }} m²</div><div class="l">Surface</div></div>
+        <div class="detail-meta-item"><div class="v">{{ bien.nb_pieces }}</div><div class="l">Pièce{{ bien.nb_pieces|pluralize }}</div></div>
+        {% if bien.etage != None %}
+        <div class="detail-meta-item"><div class="v">{{ bien.etage }}</div><div class="l">Étage</div></div>
+        {% endif %}
+      </div>
+
+      <div class="detail-desc">
+        <h2>Description</h2>
+        {% if bien.description %}
+          <p>{{ bien.description }}</p>
+        {% else %}
+          <p style="color:var(--text-faint)">Aucune description fournie pour ce bien.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="contact-box">
+      <div class="card">
+        <div class="card-body">
+          <div class="price">{{ bien.loyer_charges|floatformat:0 }} F CFA <span>/ mois, charges comprises</span></div>
+          {% if bien.depot_garantie %}
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Dépôt de garantie : {{ bien.depot_garantie|floatformat:0 }} F CFA</p>
+          {% endif %}
+
+          <h3>Intéressé(e) par ce bien ?</h3>
+          <form method="post">
+            {% csrf_token %}
+            {{ form.bien }}
+            <div class="form-group" style="margin-top:12px">
+              {{ form.nom }}
+              {{ form.nom.errors }}
+            </div>
+            <div class="form-group">
+              {{ form.email }}
+              {{ form.email.errors }}
+            </div>
+            <div class="form-group">
+              {{ form.telephone }}
+              {{ form.telephone.errors }}
+            </div>
+            <div class="form-group">
+              {{ form.message }}
+              {{ form.message.errors }}
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Envoyer ma demande</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if autres_biens %}
+  <div class="similar-section">
+    <div class="section-head" style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:19px;font-weight:700">Autres biens à {{ bien.ville }}</h2>
+    </div>
+    <div class="property-grid">
+      {% for b in autres_biens %}
+      <a href="{% url 'bien_public_detail' b.pk %}" class="property-card card">
+        {% if b.photo %}
+          <img class="property-photo" src="{{ b.photo.url }}" alt="{{ b.nom }}">
+        {% else %}
+          <div class="property-photo-placeholder">🏠</div>
+        {% endif %}
+        <div class="property-body">
+          <div class="property-title">{{ b.nom }}</div>
+          <div class="property-loc">📍 {{ b.ville }}</div>
+          <div class="property-price">{{ b.loyer_charges|floatformat:0 }} F CFA <span>/ mois CC</span></div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

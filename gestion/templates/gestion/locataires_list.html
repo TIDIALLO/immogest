@@ -1,0 +1,51 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Locataires — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Locataires</h1>
+  <form class="search-form" method="get">
+    <input class="search-input" name="q" value="{{ q }}" placeholder="Nom, email…">
+    <button type="submit" class="btn">Rechercher</button>
+  </form>
+  <a href="{% url 'locataire_create' %}" class="btn btn-primary">+ Ajouter</a>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead><tr><th>Locataire</th><th>Email</th><th>Téléphone</th><th>Bien actuel</th><th>Depuis</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for l in locataires %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">{{ l.initiales }}</div>
+            <a href="{% url 'locataire_detail' l.pk %}" style="color:var(--blue);text-decoration:none;font-weight:500">{{ l }}</a>
+          </div>
+        </td>
+        <td style="color:var(--text-muted)">{{ l.email }}</td>
+        <td style="color:var(--text-muted)">{{ l.telephone }}</td>
+        <td>
+          {% if l.contrat_actif %}
+            <a href="{% url 'bien_detail' l.contrat_actif.bien.pk %}" style="color:var(--blue);text-decoration:none">{{ l.contrat_actif.bien.nom }}</a>
+          {% else %}<span style="color:var(--text-faint)">—</span>{% endif %}
+        </td>
+        <td style="color:var(--text-muted)">
+          {% if l.contrat_actif %}{{ l.contrat_actif.date_debut|date:"d/m/Y" }}{% else %}—{% endif %}
+        </td>
+        <td style="white-space:nowrap">
+          <a href="{% url 'locataire_edit' l.pk %}" class="btn btn-sm">Modifier</a>
+          <a href="{% url 'locataire_delete' l.pk %}" class="btn btn-sm btn-danger" style="margin-left:4px">Supprimer</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="color:var(--text-faint);text-align:center;padding:32px">
+        Aucun locataire. <a href="{% url 'locataire_create' %}" style="color:var(--blue)">Ajoutez-en un</a>.
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

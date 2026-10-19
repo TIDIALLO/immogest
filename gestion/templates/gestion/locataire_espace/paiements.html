@@ -1,0 +1,32 @@
+{% extends 'gestion/locataire_espace/base.html' %}
+{% block title %}Mes paiements — ImmoGest{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Mes paiements</h1></div>
+<div class="content">
+  <div class="card">
+    <table>
+      <thead><tr><th>Mois</th><th>Bien</th><th>Montant dû</th><th>Payé</th><th>Mode</th><th>Date paiement</th><th>Statut</th><th>Quittance</th></tr></thead>
+      <tbody>
+      {% for p in paiements %}
+        <tr>
+          <td>{{ p.mois|date:"F Y" }}</td>
+          <td>{{ p.contrat.bien.nom }}</td>
+          <td>{{ p.montant_du|floatformat:0 }} F</td>
+          <td>{{ p.montant_paye|floatformat:0 }} F</td>
+          <td>{{ p.get_mode_paiement_display|default:"—" }}</td>
+          <td>{% if p.date_paiement %}{{ p.date_paiement|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+          <td><span class="badge badge-{{ p.statut }}">{{ p.get_statut_display }}</span></td>
+          <td>
+            {% if p.montant_paye > 0 %}
+            <a href="{% url 'espace_locataire_quittance_pdf' p.pk %}" class="btn btn-sm">📄 Télécharger</a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="empty">Aucun paiement enregistré.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

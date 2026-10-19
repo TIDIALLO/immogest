@@ -1,0 +1,19 @@
+# Environnement
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Base de données locale
+db.sqlite3
+
+# Médias uploadés (à adapter selon votre stockage en production)
+media/
+
+# Fichiers statiques compilés (générés par collectstatic)
+staticfiles/
+
+# IDE
+.vscode/
+.idea/

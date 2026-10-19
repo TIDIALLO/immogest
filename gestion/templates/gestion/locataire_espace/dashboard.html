@@ -1,0 +1,85 @@
+{% extends 'gestion/locataire_espace/base.html' %}
+{% block title %}Mon espace — ImmoGest{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Bonjour {{ locataire.prenom }} 👋</h1>
+</div>
+<div class="content">
+
+  {% if not contrat %}
+    <div class="card card-body empty">Aucun contrat actif n'est associé à votre compte pour le moment.</div>
+  {% else %}
+    {% if montant_du and montant_du > 0 %}
+    <div class="alert alert-error" style="margin-bottom:20px">
+      Un solde de <strong>{{ montant_du|floatformat:0 }} F CFA</strong> reste dû sur votre dernier loyer.
+    </div>
+    {% endif %}
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Logement</div>
+        <div class="stat-value" style="font-size:16px">{{ contrat.bien.nom }}</div>
+        <div class="stat-sub">{{ contrat.bien.adresse }}, {{ contrat.bien.ville }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Loyer mensuel (charges comprises)</div>
+        <div class="stat-value">{{ contrat.loyer_total|floatformat:0 }} F</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Début du bail</div>
+        <div class="stat-value" style="font-size:18px">{{ contrat.date_debut|date:"d/m/Y" }}</div>
+        <div class="stat-sub">{% if contrat.date_fin %}Fin : {{ contrat.date_fin|date:"d/m/Y" }}{% else %}Durée indéterminée{% endif %}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Statut du contrat</div>
+        <div class="stat-value" style="font-size:16px"><span class="badge badge-{{ contrat.statut }}">{{ contrat.get_statut_display }}</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <h2>Derniers paiements</h2>
+        <a href="{% url 'espace_locataire_paiements' %}" class="btn btn-sm">Voir tout</a>
+      </div>
+      <table>
+        <thead><tr><th>Mois</th><th>Montant dû</th><th>Payé</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for p in paiements_recents %}
+          <tr>
+            <td>{{ p.mois|date:"F Y" }}</td>
+            <td>{{ p.montant_du|floatformat:0 }} F</td>
+            <td>{{ p.montant_paye|floatformat:0 }} F</td>
+            <td><span class="badge badge-{{ p.statut }}">{{ p.get_statut_display }}</span></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="empty">Aucun paiement enregistré.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Signalements récents</h2>
+        <a href="{% url 'espace_locataire_intervention_create' %}" class="btn btn-primary btn-sm">＋ Signaler un problème</a>
+      </div>
+      <table>
+        <thead><tr><th>Titre</th><th>Signalé le</th><th>Priorité</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for i in interventions %}
+          <tr>
+            <td style="font-weight:500">{{ i.titre }}</td>
+            <td>{{ i.date_signalement|date:"d/m/Y" }}</td>
+            <td><span class="badge badge-{{ i.priorite }}">{{ i.get_priorite_display }}</span></td>
+            <td><span class="badge badge-{{ i.statut }}">{{ i.get_statut_display }}</span></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="empty">Aucun signalement pour l'instant.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

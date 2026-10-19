@@ -1,0 +1,84 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Nouvelle réservation — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Nouvelle réservation</h1>
+</div>
+
+<div class="content">
+  <div class="card" style="max-width:640px;padding:26px">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label>Bien / chambre</label>
+        {{ form.bien }}
+        {{ form.bien.errors }}
+      </div>
+
+      <div class="form-group">
+        <label>Nom du client</label>
+        {{ form.nom }}
+        {{ form.nom.errors }}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Téléphone</label>
+          {{ form.telephone }}
+          {{ form.telephone.errors }}
+        </div>
+        <div class="form-group">
+          <label>Email (optionnel)</label>
+          {{ form.email }}
+          {{ form.email.errors }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Date d'arrivée</label>
+          {{ form.date_arrivee }}
+          {{ form.date_arrivee.errors }}
+        </div>
+        <div class="form-group">
+          <label>Date de départ (optionnel)</label>
+          {{ form.date_depart }}
+          {{ form.date_depart.errors }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Nombre de personnes</label>
+          {{ form.nb_personnes }}
+          {{ form.nb_personnes.errors }}
+        </div>
+        <div class="form-group">
+          <label>Mode de paiement</label>
+          {{ form.mode_paiement }}
+          {{ form.mode_paiement.errors }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Statut</label>
+        <select name="statut">
+          {% for key, label in statut_choices %}
+          <option value="{{ key }}" {% if key == 'confirmee' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Message / notes (optionnel)</label>
+        {{ form.message }}
+      </div>
+
+      <button type="submit" class="btn btn-primary">Enregistrer la réservation</button>
+      <a href="{% url 'reservations_list' %}" class="btn">Annuler</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

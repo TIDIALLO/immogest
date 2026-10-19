@@ -1,0 +1,75 @@
+{% extends 'site_public/base.html' %}
+{% block title %}Nos biens disponibles — ImmoGest{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { background: #fff; border-bottom: 1px solid var(--border); padding: 32px 0; }
+.page-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.page-header p { color: var(--text-muted); font-size: 14px; }
+.filters { background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; display: flex; gap: 10px; flex-wrap: wrap; margin: 24px 0; }
+.filters input, .filters select { padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13.5px; font-family: inherit; }
+.filters input[name="q"] { flex: 1; min-width: 180px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Nos biens disponibles</h1>
+    <p>{{ biens|length }} bien{{ biens|length|pluralize }} correspondant à votre recherche</p>
+  </div>
+</div>
+
+<div class="container">
+  <form class="filters" method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Nom, adresse, ville…">
+    <select name="ville">
+      <option value="">Toutes les villes</option>
+      {% for v in villes %}
+      <option value="{{ v }}" {% if ville == v %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+    <select name="type">
+      <option value="">Tous les types</option>
+      {% for key, label in type_choices %}
+      <option value="{{ key }}" {% if type_bien == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input type="number" name="prix_max" value="{{ prix_max }}" placeholder="Loyer max FCFA">
+    <button type="submit" class="btn btn-primary">Filtrer</button>
+  </form>
+
+  {% if biens %}
+  <div class="property-grid" style="padding-bottom:60px">
+    {% for b in biens %}
+    <a href="{% url 'bien_public_detail' b.pk %}" class="property-card card">
+      {% if b.photo %}
+        <img class="property-photo" src="{{ b.photo.url }}" alt="{{ b.nom }}">
+      {% else %}
+        <div class="property-photo-placeholder">🏠</div>
+      {% endif %}
+      <div class="property-body">
+        <span class="badge badge-libre">Disponible</span>
+        <div class="property-title" style="margin-top:8px">{{ b.nom }}</div>
+        <div class="property-loc">📍 {{ b.ville }}</div>
+        <div class="property-meta">
+          <span>{{ b.get_type_bien_display }}</span>
+          <span>{{ b.surface }} m²</span>
+          <span>{{ b.nb_pieces }} pièce{{ b.nb_pieces|pluralize }}</span>
+        </div>
+        <div class="property-price">{{ b.loyer_charges|floatformat:0 }} F CFA <span>/ mois CC</span></div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size:40px;margin-bottom:12px">🔍</div>
+    <p>Aucun bien ne correspond à votre recherche pour le moment.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'gestion/base.html' %}
+{% block title %}Demandes de contact — ImmoGest{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>Demandes de contact</h1>
+  <form class="search-form" method="get">
+    <select name="statut" onchange="this.form.submit()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;background:#fff">
+      <option value="">Toutes</option>
+      <option value="non_traite" {% if statut == 'non_traite' %}selected{% endif %}>Non traitées</option>
+      <option value="traite" {% if statut == 'traite' %}selected{% endif %}>Traitées</option>
+    </select>
+  </form>
+</div>
+
+<div class="content">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Nom</th><th>Contact</th><th>Bien concerné</th><th>Message</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for d in demandes %}
+      <tr>
+        <td style="color:var(--text-muted)">{{ d.created_at|date:"d/m/Y H:i" }}</td>
+        <td style="font-weight:500">{{ d.nom }}</td>
+        <td style="color:var(--text-muted)">
+          {{ d.email }}{% if d.telephone %}<br>{{ d.telephone }}{% endif %}
+        </td>
+        <td>
+          {% if d.bien %}
+            <a href="{% url 'bien_detail' d.bien.pk %}" style="color:var(--blue);text-decoration:none">{{ d.bien.nom }}</a>
+          {% else %}<span style="color:var(--text-faint)">Contact général</span>{% endif %}
+        </td>
+        <td style="max-width:320px;color:var(--text-muted)">{{ d.message|truncatewords:20 }}</td>
+        <td>
+          {% if d.traite %}<span class="badge badge-terminee">Traitée</span>
+          {% else %}<span class="badge badge-ouverte">Nouvelle</span>{% endif %}
+        </td>
+        <td style="white-space:nowrap">
+          <form method="post" action="{% url 'demande_toggle_traite' d.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm">{% if d.traite %}Marquer non traitée{% else %}Marquer traitée{% endif %}</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="color:var(--text-faint);text-align:center;padding:32px">
+        Aucune demande reçue pour le moment.
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
