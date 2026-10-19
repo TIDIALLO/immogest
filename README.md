@@ -1,5 +1,5 @@
 # ImmoGest — Application de gestion immobilière Django
-
+# Projet Django de gestion immobilière.
 ## Fonctionnalités
 
 - **Biens** : gestion complète (appartements, maisons, studios, commerces, garages)
