@@ -47,7 +47,7 @@ class PaiementForm(forms.ModelForm):
 
     class Meta:
         model = Paiement
-        exclude = ['created_at']
+        exclude = ['created_at', 'statut']
         widgets = {
             'mois': forms.DateInput(attrs={'type': 'date'}),
             'date_paiement': forms.DateInput(attrs={'type': 'date'}),

@@ -1,5 +1,74 @@
-# ImmoGest — Application de gestion immobilière Django
-# Projet Django de gestion immobilière.
+# ImmoGest — Plateforme de gestion immobilière (Django + React)
+
+Application de gestion locative pour le Sénégal (FCFA, Wave / Orange Money / Free Money) :
+**API REST Django** + **interface React** (Vite, TypeScript, Tailwind CSS, composants shadcn/ui) + site public.
+
+| Couche | Technologies |
+|---|---|
+| Backend | Django 5.1, Django REST Framework, JWT (simplejwt), django-filter, drf-spectacular |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui (Radix), TanStack Query, React Hook Form, Recharts, cmdk |
+| Données | PostgreSQL (prod) / SQLite (dev), PDF reportlab, export Excel openpyxl |
+| Qualité | pytest (31 tests), Vitest (11 tests), GitHub Actions, Docker |
+
+## Les trois surfaces
+
+| URL | Contenu |
+|---|---|
+| `/` | Site public (catalogue, réservation, contact) |
+| `/app/` | **Application React** : back-office gestionnaire et espace locataire |
+| `/api/v1/` · `/api/docs/` | **API REST** et documentation Swagger/OpenAPI |
+| `/gestion/` | Ancienne interface Django (conservée) |
+
+## Démarrage rapide (développement)
+
+```bash
+python -m venv .venv && source .venv/bin/activate      # Windows : .venv\Scriptsctivate
+pip install -r requirements-dev.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py seed_demo            # données de démonstration (compte demo / Demo-ImmoGest-2026)
+python manage.py runserver            # API + site public sur :8000
+
+# Dans un second terminal : interface React avec rechargement à chaud
+cd frontend && npm install && npm run dev      # http://localhost:5173/app/
+```
+
+Pour servir l'application React directement par Django (comme en production) :
+`cd frontend && npm run build`, puis ouvrir `http://127.0.0.1:8000/app/`.
+
+## Ce que l'application fait automatiquement
+
+- **Loyers** : génération mensuelle (`/paiements/generer-mois/` ou `python manage.py taches_quotidiennes`) ;
+  le statut (payé / partiel / en retard) est **calculé** à partir des montants et de l'échéance ; versements partiels.
+- **Contrats** : un seul contrat actif par bien ; le bien passe en « loué » / « libre » automatiquement ; résiliation en un clic.
+- **Réservations** : contrôle de disponibilité (pas de double réservation), montant calculé, expiration des impayées (48 h),
+  conversion en contrat saisonnier, page de suivi protégée par un jeton secret.
+- **Notifications** : cloche dans l'application + email à chaque réservation, message ou signalement locataire.
+- **Accès locataire** : lien d'activation à usage unique (plus de mot de passe envoyé en clair).
+
+## API
+
+Documentation interactive : `/api/docs/` (schéma : `/api/schema/`). Authentification par session + CSRF (application React)
+ou JWT (`POST /api/v1/auth/token/`) pour les clients mobiles. Pagination, recherche (`?search=`), filtres (`?statut=`),
+tri (`?ordering=`), erreurs au format `{code, message, details}`, limitation de débit sur la connexion et les formulaires publics.
+
+## Tests et qualité
+
+```bash
+pytest                                  # backend
+cd frontend && npm test && npm run lint # frontend
+```
+
+## Tâches planifiées
+
+```
+0 8 * * *  cd /chemin/immogest && .venv/bin/python manage.py taches_quotidiennes
+```
+
+---
+
+## Documentation historique (version Django classique)
+
 ## Fonctionnalités
 
 - **Biens** : gestion complète (appartements, maisons, studios, commerces, garages)
@@ -122,11 +191,15 @@ pour rattacher tous les biens à un compte précis (utile surtout en mode isolé
 
 ```
 immogest/
+├── frontend/          # Application React (Vite + TypeScript + Tailwind + shadcn/ui)
+├── api/               # API REST (serializers, viewsets, auth, public, espace locataire)
+├── tests/             # Tests pytest (services + API)
 ├── immogest/          # Configuration Django
 │   ├── settings.py
 │   └── urls.py
 ├── gestion/           # Application principale
-│   ├── models.py      # Bien, Locataire, Contrat, Paiement, Intervention
+│   ├── models.py      # Bien, Locataire, Contrat, Paiement, Intervention, Reservation, Notification
+│   ├── services.py    # Logique métier (loyers, contrats, réservations, accès locataire)
 │   ├── views.py       # Toutes les vues (dont l'espace locataire)
 │   ├── forms.py       # Formulaires
 │   ├── urls.py        # Routes

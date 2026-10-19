@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect # type: ignore
 from django.contrib import messages # type: ignore
-from django.db import transaction # type: ignore
+from django.core.exceptions import ValidationError # type: ignore
 from django.db.models import Q # type: ignore
 from gestion.models import Bien, Reservation, DemandeContact
 from gestion.forms import ContactPublicForm, ReservationForm
+from gestion import services
 
 
 def index(request):
@@ -104,12 +105,7 @@ def reservation_rooms_list(request):
 
 
 def _creer_demande_depuis_reservation(reservation):
-    """
-    Crée dans « Demandes clients » un message signalant la nouvelle réservation,
-    afin que le propriétaire la voie aussi de ce côté (liste + badge du menu).
-    Les informations essentielles sont placées au début du message, car la liste
-    n'en affiche que les premiers mots.
-    """
+    """Crée dans « Demandes clients » un message signalant la nouvelle réservation."""
     depart = (f", départ le {reservation.date_depart:%d/%m/%Y}"
               if reservation.date_depart else "")
     message = (
@@ -120,36 +116,36 @@ def _creer_demande_depuis_reservation(reservation):
     )
     if reservation.message:
         message += f" Message du client : {reservation.message}"
-
     DemandeContact.objects.create(
-        bien=reservation.bien,
-        nom=reservation.nom,
-        email=reservation.email,
-        telephone=reservation.telephone,
-        message=message,
-    )
+        bien=reservation.bien, nom=reservation.nom, email=reservation.email,
+        telephone=reservation.telephone, message=message)
 
 
 def reservation_create(request, pk):
-    """Formulaire de commande/réservation pour une chambre précise."""
+    """Formulaire de commande/réservation pour une chambre précise (avec contrôle de disponibilité)."""
     bien = get_object_or_404(Bien, pk=pk, statut='libre')
 
     if request.method == 'POST':
         form = ReservationForm(request.POST, initial={'bien': bien.pk})
         if form.is_valid():
-            with transaction.atomic():
-                reservation = form.save(commit=False)
-                reservation.bien = bien
-                reservation.save()
+            donnees = {k: v for k, v in form.cleaned_data.items() if k != 'bien'}
+            try:
+                reservation = services.creer_reservation(bien, **donnees)
+            except ValidationError as exc:
+                for champ, erreurs in getattr(exc, 'message_dict', {'__all__': exc.messages}).items():
+                    for erreur in erreurs:
+                        form.add_error(champ if champ in form.fields else None, erreur)
+            else:
                 _creer_demande_depuis_reservation(reservation)
-            return redirect('reservation_confirmation', pk=reservation.pk)
+                return redirect('reservation_confirmation', token=reservation.token)
     else:
         form = ReservationForm(initial={'bien': bien.pk})
 
-    return render(request, 'site_public/reservation_form.html', {'bien': bien, 'form': form})
+    return render(request, 'site_public/reservation_form.html', {
+        'bien': bien, 'form': form, 'dates_occupees': services.dates_occupees(bien)})
 
 
-def reservation_confirmation(request, pk):
+def reservation_confirmation(request, token):
     """Page de confirmation : instructions de paiement Wave / Orange Money + WhatsApp."""
-    reservation = get_object_or_404(Reservation, pk=pk)
+    reservation = get_object_or_404(Reservation, token=token)
     return render(request, 'site_public/reservation_confirmation.html', {'reservation': reservation})

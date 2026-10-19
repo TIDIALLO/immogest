@@ -17,3 +17,10 @@ staticfiles/
 # IDE
 .vscode/
 .idea/
+
+# Frontend (React / Vite)
+frontend/node_modules/
+frontend/dist/
+.pytest_cache/
+.venv/
+*.log

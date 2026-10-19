@@ -8,10 +8,11 @@ from django.core.mail import send_mail # type: ignore
 from django.utils.crypto import get_random_string # type: ignore
 from functools import wraps # type: ignore
 from django.contrib import messages # type: ignore
-from django.db.models import Sum, Count, Q # type: ignore
+from django.db.models import Sum, Count, Q, Case, When, IntegerField # type: ignore
 from django.db.models.functions import TruncMonth # type: ignore
 from django.utils import timezone # type: ignore
 from django.http import HttpResponse # type: ignore
+from django.views.decorators.http import require_POST # type: ignore
 import csv
 import json
 from datetime import date, timedelta
@@ -21,6 +22,7 @@ from .forms import (BienForm, LocataireForm, ContratForm,
 from .pdf_utils import generer_quittance_pdf, generer_rapport_financier_pdf
 from .utils import mois_annee_fr_abrege
 from .scope import proprietaires_visibles
+from .services import interventions_du_locataire
 
 
 def _mois_moins(d, n):
@@ -57,6 +59,7 @@ def login_view(request):
     return render(request, 'gestion/login.html', {'form': form})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('login')
@@ -109,7 +112,10 @@ def dashboard(request):
     interventions = Intervention.objects.filter(
         bien__proprietaire__in=proprietaires_visibles(u),
         statut__in=['ouverte', 'en_cours']
-    ).order_by('-priorite')[:5]
+    ).annotate(poids=Case(
+        When(priorite='urgente', then=4), When(priorite='haute', then=3),
+        When(priorite='normale', then=2), default=1, output_field=IntegerField(),
+    )).order_by('-poids', '-date_signalement')[:5]
 
     # Derniers paiements
     paiements_recents = Paiement.objects.filter(
@@ -291,9 +297,7 @@ def contrats_list(request):
 def contrat_create(request):
     form = ContratForm(request.user, request.POST or None)
     if form.is_valid():
-        c = form.save()
-        c.bien.statut = 'loue'
-        c.bien.save()
+        form.save()
         messages.success(request, 'Contrat créé.')
         return redirect('contrats_list')
     return render(request, 'gestion/contrat_form.html', {'form': form, 'title': 'Nouveau contrat'})
@@ -597,8 +601,7 @@ def espace_locataire_dashboard(request):
     contrat = locataire.contrat_actif
     paiements_recents = Paiement.objects.filter(contrat__locataire=locataire).order_by('-mois')[:6] \
         if contrat else Paiement.objects.none()
-    interventions = Intervention.objects.filter(bien__contrats__locataire=locataire).distinct().order_by('-date_signalement')[:5] \
-        if contrat else Intervention.objects.none()
+    interventions = interventions_du_locataire(locataire)[:5]
 
     montant_du = None
     if contrat:
@@ -638,7 +641,7 @@ def espace_locataire_quittance_pdf(request, pk):
 @locataire_required
 def espace_locataire_interventions(request):
     locataire = request.user.locataire_profile
-    interventions = Intervention.objects.filter(bien__contrats__locataire=locataire).distinct().order_by('-date_signalement')
+    interventions = interventions_du_locataire(locataire)
     return render(request, 'gestion/locataire_espace/interventions.html', {'locataire': locataire, 'interventions': interventions})
 
 
@@ -660,6 +663,7 @@ def espace_locataire_intervention_create(request):
                 titre=titre,
                 description=description,
                 priorite=priorite if priorite in dict(Intervention.PRIORITE_CHOICES) else 'normale',
+                signale_par=request.user,
             )
             messages.success(request, "Votre signalement a bien été transmis au propriétaire.")
             return redirect('espace_locataire_interventions')

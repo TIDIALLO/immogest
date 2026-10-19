@@ -1,0 +1,10 @@
+{
+  "name": "ImmoGest",
+  "short_name": "ImmoGest",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#185FA5",
+  "icons": [{ "src": "/app/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

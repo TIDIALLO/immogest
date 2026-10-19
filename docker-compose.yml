@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: immogest
+      POSTGRES_USER: immogest
+      POSTGRES_PASSWORD: immogest
+    volumes: [pgdata:/var/lib/postgresql/data]
+  web:
+    build: .
+    depends_on: [db]
+    ports: ["8000:8000"]
+    environment:
+      DEBUG: "True"
+      DATABASE_URL: postgres://immogest:immogest@db:5432/immogest
+volumes:
+  pgdata:

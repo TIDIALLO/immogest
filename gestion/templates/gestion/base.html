@@ -197,7 +197,7 @@ tr:hover td { background: var(--gray-50); }
     <div class="avatar">{{ user.username|slice:":1"|upper }}{{ user.username|slice:"1:2"|upper }}</div>
     <div>
       <div style="font-weight:500;font-size:13px">{{ user.username }}</div>
-      <a href="{% url 'logout' %}" style="font-size:12px;color:var(--text-faint);text-decoration:none">Déconnexion</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button type="submit" style="font-size:12px;color:var(--text-faint);background:none;border:0;cursor:pointer;padding:0">Déconnexion</button></form>
     </div>
   </div>
 </aside>

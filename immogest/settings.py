@@ -26,7 +26,10 @@ if not DEBUG and SECRET_KEY == 'django-immogest-secret-key-changez-en-production
         "lancer le site en production (DEBUG=False)."
     )
 
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+# En production (DEBUG=False), ALLOWED_HOSTS doit être renseigné explicitement.
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '*' if DEBUG else '').split(',') if h.strip()]
+if not DEBUG and (not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS):
+    raise RuntimeError("SECURITE : renseignez ALLOWED_HOSTS (domaines séparés par des virgules) en production.")
 
 # Données partagées entre tous les comptes de gestion (voir gestion/scope.py).
 # True  : tous les comptes voient les mêmes biens, locataires, réservations...
@@ -40,6 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'django_filters',
+    'drf_spectacular',
+    'corsheaders',
     'gestion',
     'site_public',
 ]
@@ -47,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -98,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'fr-fr'
-TIME_ZONE = 'Europe/Paris'
+TIME_ZONE = 'Africa/Dakar'
 USE_I18N = True
 USE_TZ = True
 
@@ -144,9 +152,11 @@ LOGOUT_REDIRECT_URL = '/gestion/login/'
 
 # ── Sécurité HTTPS (activer une fois le HTTPS en place en production) ─────
 if not DEBUG:
-    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', False)
-    SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', False)
-    CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', False)
+    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', True)
+    CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', True)
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 31536000))
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ── Emails (notifications : nouvelle demande, réservation, accès locataire) ─
 # En local : les emails s'affichent dans la console au lieu d'être envoyés.
@@ -163,3 +173,62 @@ if env_bool('EMAIL_USE_SMTP', False):
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'noreply@immogest.local'
+
+
+# ── API REST (DRF) ────────────────────────────────────────────────────────
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.StandardPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'api.errors.exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '300/hour',
+        'user': '5000/hour',
+        'login': '10/min',
+        'public_write': '20/hour',
+    },
+}
+
+from datetime import timedelta  # noqa: E402
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'ImmoGest API',
+    'DESCRIPTION': 'API REST de gestion immobilière (biens, locataires, contrats, loyers, réservations).',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+# L'application React est servie par Django sur /app/ (même origine : cookies de session + CSRF).
+# En développement, Vite (http://localhost:5173) proxifie /api vers Django ; CORS ci-dessous pour un front séparé.
+CORS_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
+    'CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173' if DEBUG else '').split(',') if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173' if DEBUG else '').split(',') if o.strip()]
+FRONTEND_DIST = BASE_DIR / 'frontend' / 'dist'
+
+# Journalisation : les erreurs d'envoi d'email et de paiement ne doivent plus être silencieuses.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'root': {'handlers': ['console'], 'level': os.environ.get('LOG_LEVEL', 'INFO')},
+}

@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 209 74% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 95%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 210 60% 94%;
+    --accent-foreground: 209 74% 28%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 92% 46%;
+    --warning-foreground: 0 0% 100%;
+    --border: 214 32% 90%;
+    --input: 214 32% 88%;
+    --ring: 209 74% 37%;
+    --radius: 0.65rem;
+  }
+  .dark {
+    --background: 222 40% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 36% 10%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 36% 10%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 209 80% 56%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 217 28% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 28% 15%;
+    --muted-foreground: 215 20% 66%;
+    --accent: 217 32% 19%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 52% 44%;
+    --success-foreground: 222 47% 8%;
+    --warning: 38 92% 56%;
+    --warning-foreground: 222 47% 8%;
+    --border: 217 28% 20%;
+    --input: 217 28% 22%;
+    --ring: 209 80% 56%;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

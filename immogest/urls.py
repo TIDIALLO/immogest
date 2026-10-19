@@ -3,6 +3,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from api import spa
+from api.urls import docs_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,6 +18,15 @@ urlpatterns = [
         template_name='gestion/password_reset_confirm.html'), name='password_reset_confirm'),
     path('gestion/reinitialiser/termine/', auth_views.PasswordResetCompleteView.as_view(
         template_name='gestion/password_reset_complete.html'), name='password_reset_complete'),
+
+    path('api/v1/', include('api.urls')),
+    path('api/', include(docs_urlpatterns)),
+    path('api/health/', spa.health),
+
+    # Application React (back-office + espace locataire)
+    path('app/assets/<path:path>', spa.assets),
+    path('app/', spa.index),
+    path('app/<path:path>', spa.index),
 
     path('gestion/', include('gestion.urls')),
     path('', include('site_public.urls')),
