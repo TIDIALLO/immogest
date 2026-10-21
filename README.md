@@ -33,6 +33,10 @@ python manage.py runserver            # API + site public sur :8000
 cd frontend && npm install && npm run dev      # http://localhost:5173/app/
 ```
 
+Port 8000 déjà pris ? Lancer Django sur un autre port et le dire à Vite :
+`python manage.py runserver 8010` puis `cd frontend && DJANGO_URL=http://127.0.0.1:8010 npm run dev`
+(PowerShell : `$env:DJANGO_URL="http://127.0.0.1:8010"; npm run dev`).
+
 Pour servir l'application React directement par Django (comme en production) :
 `cd frontend && npm run build`, puis ouvrir `http://127.0.0.1:8000/app/`.
 
